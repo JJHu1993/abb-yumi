@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<package>
+  <name>abb_control_example</name>
+  <version>0.0.1</version>
+  <description>The abb control package</description>
+
+  <maintainer email="jjhu1993@gmail.com">jjhu</maintainer>
+
+  <license>BSD</license>
+
+  <author email="jjhu1993@gmail.com">jjhu</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>gazebo_ros</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>trajectory_msgs</build_depend>
+
+  <run_depend>controller_manager</run_depend>
+  <run_depend>gazebo_ros</run_depend>
+  <run_depend>gazebo_ros_control</run_depend>
+  <run_depend>robot_state_publisher</run_depend>
+  <run_depend>ros_control</run_depend>
+  <run_depend>ros_controllers</run_depend>
+  <run_depend>gazebo_mimic</run_depend> <!-- needed for the gazebo mimic plugin -->
+  <run_depend>roscpp</run_depend>
+  <run_depend>trajectory_msgs</run_depend>
+
+  <export>
+  </export>
+
+</package>

@@ -1,0 +1,194 @@
+# Publish all joint states -----------------------------------
+joint_state_controller:
+  type: joint_state_controller/JointStateController
+  publish_rate: 500
+
+# Joint Trajectory Position Controller ----------------------------------------
+joint_trajectory_pos_controller:
+  type: "position_controllers/JointTrajectoryController"
+  joints:
+    - yumi_joint_1_l
+    - yumi_joint_2_l
+    - yumi_joint_7_l
+    - yumi_joint_3_l
+    - yumi_joint_4_l
+    - yumi_joint_5_l
+    - yumi_joint_6_l
+    - yumi_joint_1_r
+    - yumi_joint_2_r
+    - yumi_joint_7_r
+    - yumi_joint_3_r
+    - yumi_joint_4_r
+    - yumi_joint_5_r
+    - yumi_joint_6_r
+
+# Joint Trajectory Velocity Controller ----------------------------------------
+joint_trajectory_vel_controller:
+  type: "velocity_controllers/JointTrajectoryController"
+  joints:
+    - yumi_joint_1_l
+    - yumi_joint_2_l
+    - yumi_joint_7_l
+    - yumi_joint_3_l
+    - yumi_joint_4_l
+    - yumi_joint_5_l
+    - yumi_joint_6_l
+    - yumi_joint_1_r
+    - yumi_joint_2_r
+    - yumi_joint_7_r
+    - yumi_joint_3_r
+    - yumi_joint_4_r
+    - yumi_joint_5_r
+    - yumi_joint_6_r
+  gains:
+    yumi_joint_1_l: {p: 1.5,  d: 0, i: 0.002, i_clamp: 0.1}
+    yumi_joint_2_l: {p: 1.5,  d: 0, i: 0.002, i_clamp: 0.1}
+    yumi_joint_7_l: {p: 1.5,  d: 0, i: 0.002, i_clamp: 0.1}
+    yumi_joint_3_l: {p: 1.5,  d: 0, i: 0.002, i_clamp: 0.1}
+    yumi_joint_4_l: {p: 1.5,  d: 0, i: 0.002, i_clamp: 0.1}
+    yumi_joint_5_l: {p: 1.5,  d: 0, i: 0.002, i_clamp: 0.1}
+    yumi_joint_6_l: {p: 1.5,  d: 0, i: 0.002, i_clamp: 0.1}
+    yumi_joint_1_r: {p: 1.5,  d: 0, i: 0.002, i_clamp: 0.1}
+    yumi_joint_2_r: {p: 1.5,  d: 0, i: 0.002, i_clamp: 0.1}
+    yumi_joint_7_r: {p: 1.5,  d: 0, i: 0.002, i_clamp: 0.1}
+    yumi_joint_3_r: {p: 1.5,  d: 0, i: 0.002, i_clamp: 0.1}
+    yumi_joint_4_r: {p: 1.5,  d: 0, i: 0.002, i_clamp: 0.1}
+    yumi_joint_5_r: {p: 1.5,  d: 0, i: 0.002, i_clamp: 0.1}
+    yumi_joint_6_r: {p: 1.5,  d: 0, i: 0.002, i_clamp: 0.1}
+
+# hiqp joint velocity controller ----------------------------------------
+  hiqp_joint_velocity_controller:
+    type: hiqp_ros/HiQPJointVelocityController
+    sampling_time: 500.0
+    joints:
+      - yumi_joint_1_r
+      - yumi_joint_2_r
+      - yumi_joint_7_r
+      - yumi_joint_3_r
+      - yumi_joint_4_r
+      - yumi_joint_5_r
+      - yumi_joint_6_r
+      - yumi_joint_1_l
+      - yumi_joint_2_l
+      - yumi_joint_7_l
+      - yumi_joint_3_l
+      - yumi_joint_4_l
+      - yumi_joint_5_l
+      - yumi_joint_6_l
+    task_monitoring:
+      active: 1
+      publish_rate: 500.0
+
+# Joint Velocity Controller ----------------------------------------
+joint_1_l_velocity_controller:
+  type: velocity_controllers/JointVelocityController
+  joint: yumi_joint_1_l
+  pid:
+    p: 1.5
+    d: 0
+    i: 0.002
+    i_clamp: 0.1
+joint_2_l_velocity_controller:
+  type: velocity_controllers/JointVelocityController
+  joint: yumi_joint_2_l
+  pid:
+    p: 1.5
+    d: 0
+    i: 0.002
+    i_clamp: 0.1
+joint_3_l_velocity_controller:
+  type: velocity_controllers/JointVelocityController
+  joint: yumi_joint_3_l
+  pid:
+    p: 1.5
+    d: 0
+    i: 0.002
+    i_clamp: 0.1
+joint_4_l_velocity_controller:
+  type: velocity_controllers/JointVelocityController
+  joint: yumi_joint_4_l
+  pid:
+    p: 1.5
+    d: 0
+    i: 0.002
+    i_clamp: 0.1
+joint_5_l_velocity_controller:
+  type: velocity_controllers/JointVelocityController
+  joint: yumi_joint_5_l
+  pid:
+    p: 1.5
+    d: 0
+    i: 0.002
+    i_clamp: 0.1
+joint_6_l_velocity_controller:
+  type: velocity_controllers/JointVelocityController
+  joint: yumi_joint_6_l
+  pid:
+    p: 1.5
+    d: 0
+    i: 0.002
+    i_clamp: 0.1
+joint_7_l_velocity_controller:
+  type: velocity_controllers/JointVelocityController
+  joint: yumi_joint_7_l
+  pid:
+    p: 1.5
+    d: 0
+    i: 0.002
+    i_clamp: 0.1
+joint_1_r_velocity_controller:
+  type: velocity_controllers/JointVelocityController
+  joint: yumi_joint_1_r
+  pid:
+    p: 1.5
+    d: 0
+    i: 0.002
+    i_clamp: 0.1
+joint_2_r_velocity_controller:
+  type: velocity_controllers/JointVelocityController
+  joint: yumi_joint_2_r
+  pid:
+    p: 1.5
+    d: 0
+    i: 0.002
+    i_clamp: 0.1
+joint_3_r_velocity_controller:
+  type: velocity_controllers/JointVelocityController
+  joint: yumi_joint_3_r
+  pid:
+    p: 1.5
+    d: 0
+    i: 0.002
+    i_clamp: 0.1
+joint_4_r_velocity_controller:
+  type: velocity_controllers/JointVelocityController
+  joint: yumi_joint_4_r
+  pid:
+    p: 1.5
+    d: 0
+    i: 0.002
+    i_clamp: 0.1
+joint_5_r_velocity_controller:
+  type: velocity_controllers/JointVelocityController
+  joint: yumi_joint_5_r
+  pid:
+    p: 1.5
+    d: 0
+    i: 0.002
+    i_clamp: 0.1
+joint_6_r_velocity_controller:
+  type: velocity_controllers/JointVelocityController
+  joint: yumi_joint_6_r
+  pid:
+    p: 1.5
+    d: 0
+    i: 0.002
+    i_clamp: 0.1
+joint_7_r_velocity_controller:
+  type: velocity_controllers/JointVelocityController
+  joint: yumi_joint_7_r
+  pid:
+    p: 1.5
+    d: 0
+    i: 0.002
+    i_clamp: 0.1
