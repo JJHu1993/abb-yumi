@@ -1,6 +1,6 @@
 # abb_yumi ROS Control Package
 
-[ ![License] [license-image] ] [license]
+[[license-image] ] [license]
 
 [release-image]:
 [releases]:
@@ -47,15 +47,15 @@ The project is written in standards-conforming C++11 and relies only on the C89 
 ![alt tag](https://www.gnu.org/graphics/gplv3-127x51.png)
 The source code is released under [GPL v3](http://www.gnu.org/licenses/gpl-3.0.html)
 
-    Foobar is free software: you can redistribute it and/or modify
+    abb_yumi is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Foobar is distributed in the hope that it will be useful,
+    abb_yumi is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+    along with abb_yumi.  If not, see <http://www.gnu.org/licenses/>.
