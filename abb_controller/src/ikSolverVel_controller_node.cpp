@@ -1,6 +1,7 @@
 #include <kdl/chain.hpp>
 #include <kdl/chainfksolver.hpp>
 #include <kdl/chainfksolverpos_recursive.hpp>
+#include <kdl/chainfksolvervel_recursive.hpp>
 #include <kdl/chainiksolvervel_pinv.hpp>
 #include <kdl/chainiksolverpos_nr.hpp>
 #include <kdl/tree.hpp>
@@ -8,6 +9,7 @@
 #include <kdl/treeiksolvervel_wdls.hpp>
 #include <kdl/treeiksolverpos_nr_jl.hpp>
 #include <kdl/frames_io.hpp>
+
 #include <kdl_parser/kdl_parser.hpp>
 
 #include <ros/ros.h>
@@ -22,7 +24,7 @@
 
 #define IK_VEL
 #define JOINT_NUMBER 14
-#define LAMBDA 0.1
+#define LAMBDA 0.0001
 using namespace KDL;
 
 std::string velocityTopicNames[] = {
@@ -43,18 +45,45 @@ std::string velocityTopicNames[] = {
 
 //map joint order 1 1 2 2 3 3 ... to 1 2 7 3....,1 2 7 3...
 int map_index[]={0,2,12,4,6,8,10,1,3,13,5,7,9,11};
+//for IK_Vel use
 JntArray q_in;
+JntArray q_in_l;
+JntArray q_in_r;
+//for FK_Vel use
+JntArrayVel qdot_in_l;
+JntArrayVel qdot_in_r;
 //callback to get joint state
 void jointStatesCallback(const sensor_msgs::JointState::ConstPtr& msg)
 {
-    JntArray q_in_temp(msg->position.size());
-    for(int i = 0;i < msg->position.size();i++){
+    if(msg->position.size() != JOINT_NUMBER){
+        std::cout << "wrong joint size" << '\n';
+        return ;
+    }
+    JntArray q_in_temp(JOINT_NUMBER);
+    JntArray q_in_temp_l(JOINT_NUMBER/2);
+    JntArray q_in_temp_r(JOINT_NUMBER/2);
+    JntArray qdot_in_temp_l(JOINT_NUMBER/2);
+    JntArray qdot_in_temp_r(JOINT_NUMBER/2);
+    for(int i = 0;i <JOINT_NUMBER;i++){
         q_in_temp(i) = msg->position[map_index[i]];
+        if(i<JOINT_NUMBER/2){
+            q_in_temp_l(i) = msg->position[map_index[i]];
+            qdot_in_temp_l(i) = msg->velocity[map_index[i]];
+        }
+        else{
+            q_in_temp_r(i - JOINT_NUMBER/2) = msg->position[map_index[i]];
+            qdot_in_temp_r(i - JOINT_NUMBER/2) = msg->velocity[map_index[i]];
+        }
     }
     //ordered by {joint_1_l,2,7,3,4,5,6,joint_1_r,2,7,3,4,5,6}
     q_in = q_in_temp;
-    // for (int i = 0; i < q_in.rows(); i++) {
-    //     std::cout << q_in(i) << " ";
+    q_in_l = q_in_temp_l;
+    q_in_r = q_in_temp_r;
+    qdot_in_l = JntArrayVel(q_in_temp_l,qdot_in_temp_l);
+    qdot_in_r = JntArrayVel(q_in_temp_r,qdot_in_temp_r);
+    // qdot_in = qdot_in_temp;
+    // for (int i = 0; i < qdot_in.rows(); i++) {
+    //     std::cout << qdot_in(i) << " ";
     // }
     // std::cout << "\n";
 
@@ -62,6 +91,8 @@ void jointStatesCallback(const sensor_msgs::JointState::ConstPtr& msg)
 
 
 Twists v_in;
+Twist v_in_l;
+Twist v_in_r;
 std::string eeLinks[] = {
     "yumi_link_7_l",
     "yumi_link_7_r"};
@@ -72,21 +103,22 @@ void cartVelCallback(const std_msgs::Float64MultiArray& msg)
         v_in[eeLinks[i/3]] = Twist(Vector(msg.data[i],msg.data[i+1],msg.data[i+2]),Vector(0,0,0));
         std::cout << eeLinks[i] << " v_x:" << msg.data[i] << " v_y:" << msg.data[i+1] << " v_z:" << msg.data[i+2] << " m/s ";
     }
+    v_in_l = Twist(Vector(msg.data[0],msg.data[1],msg.data[2]),Vector(0,0,0));
+    v_in_r = Twist(Vector(msg.data[3],msg.data[4],msg.data[5]),Vector(0,0,0));
     std::cout << "\n";
 
 }
 
 int main(int argc, char** argv)
 {
-
-
-
     ros::init(argc, argv, "abb_controller", ros::init_options::NoSigintHandler);
     ros::NodeHandle node;
+
     //subscrib topic /yumi/joint_state to get joint state
     ros::Subscriber subJointStates = node.subscribe("/yumi/joint_states", 1000, jointStatesCallback);
     ros::Subscriber subCartVelocities = node.subscribe("/yumi/ikSloverVel_controller/command", 1000, cartVelCallback);
-
+    //cartesian velocity of ee publisher
+    ros::Publisher cart_vPublisher = node.advertise<std_msgs::Float64MultiArray> ("/yumi/ikSloverVel_controller/state", 1);
     std::vector <ros::Publisher> velocityPublishers;
     ros::Publisher velocityPublisher;
     for(int i = 0;i < JOINT_NUMBER;i++){
@@ -97,6 +129,7 @@ int main(int argc, char** argv)
 
     std::string robot_desc_string;
     KDL::Tree tree;
+    Chain chain_l,chain_r;  //for FK_Vel use
     node.param("robot_description",robot_desc_string,std::string());
     if(!kdl_parser::treeFromString(robot_desc_string,tree)){
       ROS_ERROR("Failed to construct kdl tree");
@@ -112,7 +145,10 @@ int main(int argc, char** argv)
     JntArray q_init(JOINT_NUMBER);
     JntArray q_out(JOINT_NUMBER);
     JntArray qdot_out(JOINT_NUMBER);
+    JntArray qdot_out_l(JOINT_NUMBER/2);
+    JntArray qdot_out_r(JOINT_NUMBER/2);
 
+    //tree IK_Vel
     std::vector<std::string>endpoints;
     endpoints.push_back("yumi_link_7_l");
     endpoints.push_back("yumi_link_7_r");
@@ -120,6 +156,17 @@ int main(int argc, char** argv)
     TreeIkSolverVel_wdls ikSolverVel(tree,endpoints);
     ikSolverVel.setLambda(LAMBDA);
 
+    //for FK_Vel use
+    SegmentMap::const_iterator rootSegment= tree.getRootSegment();
+    std::cout << "root name:" <<(*rootSegment).first<<'\n';
+    tree.getChain((*rootSegment).first,"yumi_link_7_l",chain_l);
+    tree.getChain((*rootSegment).first,"yumi_link_7_r",chain_r);
+    ChainFkSolverVel_recursive  fkSolverVel_l(chain_l);
+    ChainFkSolverVel_recursive  fkSolverVel_r(chain_r);
+
+    //chain IK_VEL
+    ChainIkSolverVel_pinv  ikSolverVel_l(chain_l);
+    ChainIkSolverVel_pinv  ikSolverVel_r(chain_r);
 
     //initialize v_in
     v_in[eeLinks[0]] = Twist(Vector(0,0,0),Vector(0,0,0));
@@ -127,18 +174,31 @@ int main(int argc, char** argv)
 
     std_msgs::Float64 joint_velocity;
     bool velocity_limit = false;
-    ros::Rate rate(2);
+    ros::Rate rate(30);
     while(ros::ok()){
         //solve velocity when joint state was known
-        double ret = -666;
-        if(q_in.rows()>0)
-            ret = ikSolverVel.CartToJnt(q_in,v_in,qdot_out);
-        if(ret>=0){
+        // double ret = -666;
+        // if(q_in.rows()>0)
+        //     ret = ikSolverVel.CartToJnt(q_in,v_in,qdot_out);
+        // if(ret>=0){
+        int ret_l0 = -666,ret_r0 = -666;
+        if(q_in_l.rows()>0 && q_in_r.rows()>0){
+            ret_l0 = ikSolverVel_l.CartToJnt(q_in_l,v_in_l,qdot_out_l);
+            ret_r0 = ikSolverVel_r.CartToJnt(q_in_r,v_in_r,qdot_out_r);
+        }
+        if(ret_l0 == SolverI::E_NOERROR && ret_r0 == SolverI::E_NOERROR){
             std::cout << "Listening to topic /yumi/ikSloverVel_controller/command\n";
             std::cout << "Send Joint Velocities:" << "  ";
             for(int i=0;i<JOINT_NUMBER;i++){
-                joint_velocity.data = qdot_out(i);
-                if(!velocity_limit && (joint_velocity.data > 0.1 || joint_velocity.data < -0.1)){
+                //tree method
+                // joint_velocity.data = qdot_out(i);
+                //chain method
+                if(i<JOINT_NUMBER/2)
+                    joint_velocity.data = qdot_out_l(i);
+                else
+                    joint_velocity.data = qdot_out_r(i-7);
+
+                if(!velocity_limit && (joint_velocity.data > 0.8 || joint_velocity.data < -0.8)){
                     velocity_limit = true;
                     std::cout << "Joint Velocity reached the limit!" << '\n';
                 }
@@ -150,11 +210,37 @@ int main(int argc, char** argv)
             std::cout << '\n';
 
         }
-        else if(ret == -666){
+        //tree method
+        //else if(ret == -666 ){
+        //chain method
+        else if(ret_l0 == -666 || ret_r0 == -666){
             std::cout << "waiting for joint states data[Please Wait]" << '\n';
         }
-
         std::cout << "------------------------" << '\n';
+
+        //--------------------------------------------------------------------------------
+        //compute FK Vel and publish
+        FrameVel cart_v_real_l,cart_v_real_r;
+        int ret_l= -1,ret_r = -1;
+        if(qdot_in_l.qdot.rows()>0 && qdot_in_r.qdot.rows()>0){
+            ret_l = fkSolverVel_l.JntToCart(qdot_in_l,cart_v_real_l);
+            ret_r = fkSolverVel_r.JntToCart(qdot_in_r,cart_v_real_r);
+        }
+        if(ret_l == SolverI::E_NOERROR && ret_r == SolverI::E_NOERROR){
+            std_msgs::Float64MultiArray cart_v_real;
+            cart_v_real.data.resize(2*3);
+            for(int i = 0;i < 2*3;i++){
+                if(i<3)
+                    cart_v_real.data[i] = cart_v_real_l.p.v[i];
+                else
+                    cart_v_real.data[i] = cart_v_real_r.p.v[i-3];
+
+            }
+            cart_vPublisher.publish(cart_v_real);
+        }
+
+
+
         ros::spinOnce();
         rate.sleep();
     }
