@@ -19,6 +19,7 @@ void quitRequested(int sig)
   g_quit = true;
 }
 
+
 // Get the URDF XML from the parameter server
 std::string getURDF(ros::NodeHandle &model_nh_, std::string param_name)
 {

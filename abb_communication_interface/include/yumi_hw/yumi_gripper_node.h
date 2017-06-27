@@ -13,7 +13,7 @@
 #include "simple_message/socket/tcp_client.h"
 #include <sensor_msgs/JointState.h>
 
-#include <yumi_hw/YumiGrasp.h>
+#include <abb_communication_interface/YumiGrasp.h>
 
 #define MSG_TYPE_GRIPPER_COMMAND 8008
 #define MSG_TYPE_GRIPPER_STATE 8009
@@ -228,8 +228,8 @@ class YumiGripperNode
 
 	ros::Timer heartbeat_;
 
-	bool request_grasp(yumi_hw::YumiGrasp::Request  &req,
-		yumi_hw::YumiGrasp::Response &res ) {
+	bool request_grasp(abb_communication_interface::YumiGrasp::Request  &req,
+		abb_communication_interface::YumiGrasp::Response &res ) {
 
 	    float left=0, right=0;
 	    if(req.gripper_id == LEFT_GRIPPER) {
@@ -242,8 +242,8 @@ class YumiGripperNode
 	    return true;
 	}
 
-	bool request_release(yumi_hw::YumiGrasp::Request  &req,
-		yumi_hw::YumiGrasp::Response &res ) {
+	bool request_release(abb_communication_interface::YumiGrasp::Request  &req,
+		abb_communication_interface::YumiGrasp::Response &res ) {
 
 	    float left=0, right=0;
 	    if(req.gripper_id == LEFT_GRIPPER) {
