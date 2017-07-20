@@ -119,6 +119,7 @@ int main(int argc, char** argv)
     ros::Subscriber subCartVelocities = node.subscribe("/yumi/ikSloverVel_controller/command", 1000, cartVelCallback);
     //cartesian velocity of ee publisher
     ros::Publisher cart_vPublisher = node.advertise<std_msgs::Float64MultiArray> ("/yumi/ikSloverVel_controller/state", 1);
+    ros::Publisher cart_pPublisher = node.advertise<std_msgs::Float64MultiArray> ("/yumi/ikSloverVel_controller/ee_cart_position", 1);
     std::vector <ros::Publisher> velocityPublishers;
     ros::Publisher velocityPublisher;
     for(int i = 0;i < JOINT_NUMBER;i++){
@@ -163,6 +164,11 @@ int main(int argc, char** argv)
     tree.getChain((*rootSegment).first,"yumi_link_7_r",chain_r);
     ChainFkSolverVel_recursive  fkSolverVel_l(chain_l);
     ChainFkSolverVel_recursive  fkSolverVel_r(chain_r);
+    
+    //chain FK_Pos
+    ChainFkSolverPos_recursive  fkSolverPos_l(chain_l);
+    ChainFkSolverPos_recursive  fkSolverPos_r(chain_r);
+    
 
     //chain IK_VEL
     ChainIkSolverVel_pinv  ikSolverVel_l(chain_l);
@@ -234,11 +240,28 @@ int main(int argc, char** argv)
                     cart_v_real.data[i] = cart_v_real_l.p.v[i];
                 else
                     cart_v_real.data[i] = cart_v_real_r.p.v[i-3];
-
             }
             cart_vPublisher.publish(cart_v_real);
         }
-
+        
+        //compute FK Pos and publish
+        Frame cart_p_real_l,cart_p_real_r;
+        int ret_p_l = -1,ret_p_r = -1;
+        if(q_in_l.rows()>0 && q_in_r.rows()>0){
+            ret_p_l = fkSolverPos_l.JntToCart(q_in_l,cart_p_real_l);
+            ret_p_r = fkSolverPos_r.JntToCart(q_in_r,cart_p_real_r);
+        }
+        if(ret_p_l == SolverI::E_NOERROR && ret_p_r == SolverI::E_NOERROR){
+            std_msgs::Float64MultiArray cart_p_real;
+            cart_p_real.data.resize(2*3);
+            for(int i = 0;i < 2*3;i++){
+                if(i<3)
+                    cart_p_real.data[i] = cart_p_real_l.p[i];
+                else
+                    cart_p_real.data[i] = cart_p_real_r.p[i-3];
+            }
+            cart_pPublisher.publish(cart_p_real);
+        }
 
 
         ros::spinOnce();
