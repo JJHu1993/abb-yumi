@@ -15,6 +15,7 @@
 #include <ros/ros.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/Float64MultiArray.h>
+#include <geometry_msgs/PoseArray.h>
 #include <sensor_msgs/JointState.h>
 #include "trajectory_msgs/JointTrajectory.h"
 
@@ -120,6 +121,7 @@ int main(int argc, char** argv)
     //cartesian velocity of ee publisher
     ros::Publisher cart_vPublisher = node.advertise<std_msgs::Float64MultiArray> ("/yumi/ikSloverVel_controller/state", 1);
     ros::Publisher cart_pPublisher = node.advertise<std_msgs::Float64MultiArray> ("/yumi/ikSloverVel_controller/ee_cart_position", 1);
+    ros::Publisher cart_pVisPublisher = node.advertise<geometry_msgs::PoseArray> ("/yumi/ikSloverVel_controller/ee_cart_position_vis", 1);
     std::vector <ros::Publisher> velocityPublishers;
     ros::Publisher velocityPublisher;
     for(int i = 0;i < JOINT_NUMBER;i++){
@@ -162,6 +164,8 @@ int main(int argc, char** argv)
     std::cout << "root name:" <<(*rootSegment).first<<'\n';
     tree.getChain((*rootSegment).first,"yumi_link_7_l",chain_l);
     tree.getChain((*rootSegment).first,"yumi_link_7_r",chain_r);
+    chain_l.addSegment(Segment("gripper_l",Joint(Joint::None),Frame(Vector(0.0,0.0,0.136))));
+    chain_r.addSegment(Segment("gripper_r",Joint(Joint::None),Frame(Vector(0.0,0.0,0.136))));
     ChainFkSolverVel_recursive  fkSolverVel_l(chain_l);
     ChainFkSolverVel_recursive  fkSolverVel_r(chain_r);
     
@@ -253,6 +257,10 @@ int main(int argc, char** argv)
         }
         if(ret_p_l == SolverI::E_NOERROR && ret_p_r == SolverI::E_NOERROR){
             std_msgs::Float64MultiArray cart_p_real;
+            geometry_msgs::PoseArray cart_p_real_vis;
+            cart_p_real_vis.header.frame_id = "world";
+            geometry_msgs::Pose cart_p_real_vis_l;
+            geometry_msgs::Pose cart_p_real_vis_r;
             cart_p_real.data.resize(2*3);
             for(int i = 0;i < 2*3;i++){
                 if(i<3)
@@ -260,6 +268,15 @@ int main(int argc, char** argv)
                 else
                     cart_p_real.data[i] = cart_p_real_r.p[i-3];
             }
+            cart_p_real_vis_l.position.x = cart_p_real_l.p[0];
+            cart_p_real_vis_l.position.y = cart_p_real_l.p[1];
+            cart_p_real_vis_l.position.z = cart_p_real_l.p[2];
+            cart_p_real_vis_r.position.x = cart_p_real_r.p[0];
+            cart_p_real_vis_r.position.y = cart_p_real_r.p[1];
+            cart_p_real_vis_r.position.z = cart_p_real_r.p[2];
+            cart_p_real_vis.poses.push_back(cart_p_real_vis_l);
+            cart_p_real_vis.poses.push_back(cart_p_real_vis_r);
+            cart_pVisPublisher.publish(cart_p_real_vis);
             cart_pPublisher.publish(cart_p_real);
         }
 
