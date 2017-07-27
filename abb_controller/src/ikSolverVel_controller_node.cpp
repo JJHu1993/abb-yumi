@@ -208,7 +208,7 @@ int main(int argc, char** argv)
                 else
                     joint_velocity.data = qdot_out_r(i-7);
 
-                if(!velocity_limit && (joint_velocity.data > 0.8 || joint_velocity.data < -0.8)){
+                if(!velocity_limit && (joint_velocity.data > 1.3 || joint_velocity.data < -1.3)){
                     velocity_limit = true;
                     std::cout << "Joint Velocity reached the limit!" << '\n';
                 }
