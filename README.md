@@ -24,7 +24,7 @@ Also we implemented a cartesian velocity controller using KDL library.
 ### First Step
 Install all of these:
 ```
-sudo apt-get install ros-kinetic-control-toolbox ros-kinetic-controller-interface ros-kinetic-controller-manager ros-kinetic-joint-limits-interface ros-kinetic-transmission-interface ros-kinetic-moveit-core ros-kinetic-moveit-planners ros-kinetic-moveit-ros-planning
+sudo apt-get install ros-kinetic-control-toolbox ros-kinetic-controller-interface ros-kinetic-controller-manager ros-kinetic-joint-limits-interface ros-kinetic-transmission-interface ros-kinetic-moveit-core ros-kinetic-moveit-planners ros-kinetic-moveit-ros-planning ros-kinetic-velocity-controllers ros-kinetic-joint-state-controller
 ```
 ### Second Step
 clone jjhu1993's fork of the package from: https://github.com/JJHu1993/industrial_core.git into your ros workspace
